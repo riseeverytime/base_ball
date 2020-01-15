@@ -1,24 +1,14 @@
-FROM codeschool/projects-cli:${PROJECTS_CLI_BUILD_TAG:-latest} as projects-cli
 FROM python:3.7.2-slim-stretch
 
-RUN apt-get update
-RUN apt-get install -y curl gnupg2 git
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs
-WORKDIR /opt/
+WORKDIR /src/app/
 
-COPY requirements.txt .
-RUN ["pip", "install", "-r", "requirements.txt"]
+COPY ./requirements.txt .
 
-RUN \
-  useradd -b /opt -c "psprojects" -M psprojects && \
-  chown -R psprojects:psprojects /opt && \
-  mkdir -p /home/psprojects && \
-  chown -R psprojects:psprojects /home/psprojects
+RUN ["pip", "install", "-r", "./requirements.txt"]
 
-ENV HOME=/home/psprojects
+COPY . .
 
-USER psprojects
-RUN ["touch", "/home/psprojects/.bashrc"]
+RUN groupadd projects && useradd --no-create-home -g projects projects && \
+  chown -R projects:projects /src/app
 
-COPY --from=projects-cli /opt/projects-cli /opt/projects-cli
+USER projects
